@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native'; // Import for route props
 import { RootStackParamList } from '../types/navigation';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
-// import LoadingFrame from '../components/LoadingFrame';
+import LoadingFrame from '../components/LoadingFrame';
 // Define the navigation prop and route prop types
 type CheckEmailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CheckEmailScreen'>;
 type CheckEmailScreenRouteProp = RouteProp<RootStackParamList, 'CheckEmailScreen'>;
@@ -65,7 +65,7 @@ const CheckEmailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
         <View style={styles.loadingFrame}>
-            {/* <LoadingFrame animatedSegments= {0} /> */}
+            <LoadingFrame animatedSegments= {0} />
         </View>
 
         <Text style={styles.messageTitle}>Check Your Email</Text>

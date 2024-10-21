@@ -26,7 +26,7 @@ const MainScreen: React.FC = () => {
     const [isMuted, setMuted] = useState(false);
     const [animatedSegments, setAnimatedSegments] = useState(0);
     const [animationInterval, setAnimationInterval] = useState<NodeJS.Timeout | null>(null);
-    const [statusInfo, setStatusInfo] = useState({ text: 'Initial', icon: 'pencil-alt' });
+    const [statusInfo, setStatusInfo] = useState({ text: 'FinalSuggestion', icon: 'pencil-alt' });
     const typingIntervalRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
     const [audioURL, setAudioURL] = useState<string | null>(null);
     const [weather, setWeather] = useState('Sunny'); 
@@ -460,6 +460,60 @@ const MainScreen: React.FC = () => {
               )}
             </View>
           </PanGestureHandler>
+
+          {/* Suggestion Box */}
+          {(statusInfo.text === 'Suggestion' || statusInfo.text === 'FinalSuggestion') && (
+            <View style={styles.suggestionContainer}>
+              <Image source={require('../assets/images/suggestion_area.jpg')} style = {styles.suggestionArea}/>
+              <View style={styles.suggestionTextBox}>
+                <Text style= {styles.suggestionTitle}>Southampton Golf Course</Text>
+                <View style = {styles.suggestionInfo}> 
+                  <Icon name="star" size={16} color="yellow"></Icon>
+                  <Text style = {styles.ratingText}>4.5(104)</Text>
+                  <Text style = {styles.distanceText}>2.4km Away</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.suggestionAccept} onPress={handleSuggestionAccept}>
+                <Icon name="paper-plane" size={20} color="white"  />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Suggestion App Box */}
+          {statusInfo.text === 'FinalSuggestion' && (
+            <View style={styles.suggestionAppBox}>
+              <View style={styles.calendarIcon}>
+                <View style={styles.suggestedMonthBox}>
+                  <Text style={styles.suggestedMonthText}>Aug</Text>
+                </View>
+                <View style={styles.suggestedDayBox}>
+                  <Text style={styles.suggestedDayText}>24</Text>
+                </View>
+              </View>
+              <View style={styles.timeIcon}>
+                <Text style={styles.suggestedTimeText}>11am</Text>
+                <Text style={styles.suggestedTimeText}>|</Text>
+                <Text style={styles.suggestedTimeText}>2pm</Text>
+              </View>
+              <View style={styles.weatherIcon}>
+                <LinearGradient
+                  colors={['#389AF5', '#006FD7']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.weatherIconInner}
+                >
+                  <Image source={{uri:
+                    weather === 'Sunny' ? 'https://img.icons8.com/?size=100&id=648&format=png&color=FFCC00':
+                    (weather === 'Cloudy' ? 'https://img.icons8.com/?size=100&id=zIVmoh4T8wh7&format=png&color=000000':
+                    'https://img.icons8.com/?size=100&id=51451&format=png&color=000000'
+                    )}}
+                    style={styles.weatherCondition}/>
+                  <Text style={styles.weatherTemperature}>19°</Text>
+                </LinearGradient>
+              </View>
+            </View>
+          )
+          }
         </View>
       </ImageBackground>
     </GestureHandlerRootView>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ImageBackground, ActivityIndicator, Keyboard, Alert } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-// import LoadingFrame from '../components/LoadingFrame';
+import LoadingFrame from '../components/LoadingFrame';
 import axios from 'axios';
 
 // Define the navigation prop type
@@ -78,7 +78,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.loadingFrame}>
-            {/* <LoadingFrame animatedSegments= {0} /> */}
+            <LoadingFrame animatedSegments= {0} />
         </View>
 
         {/* Email Input */}
