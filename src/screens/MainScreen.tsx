@@ -11,7 +11,7 @@ import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
 // import WaveFrame from '../components/WaveFrame';
-// import LoadingFrame from '../components/LoadingFrame';
+import LoadingFrame from '../components/LoadingFrame';
 // import GradientText from '../components/GradientText';
 import axios from 'axios';
 // import AudioRecorderPlayer from 'react-native-audio-recorder-player';
@@ -438,7 +438,7 @@ const MainScreen: React.FC = () => {
                       </ImageBackground>
                     </View>
                     <View style={styles.loadingFrame}>
-                      {/* <LoadingFrame animatedSegments={animatedSegments} /> */}
+                      <LoadingFrame animatedSegments={animatedSegments} />
                     </View>
                   </View>
                   
