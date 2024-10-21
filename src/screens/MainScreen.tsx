@@ -12,7 +12,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
 // import WaveFrame from '../components/WaveFrame';
 import LoadingFrame from '../components/LoadingFrame';
-// import GradientText from '../components/GradientText';
+import GradientText from '../components/GradientText';
 import axios from 'axios';
 // import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 // import SoundPlayer from 'react-native-sound-player'
@@ -26,7 +26,7 @@ const MainScreen: React.FC = () => {
     const [isMuted, setMuted] = useState(false);
     const [animatedSegments, setAnimatedSegments] = useState(0);
     const [animationInterval, setAnimationInterval] = useState<NodeJS.Timeout | null>(null);
-    const [statusInfo, setStatusInfo] = useState({ text: 'FinalSuggestion', icon: 'pencil-alt' });
+    const [statusInfo, setStatusInfo] = useState({ text: 'Initial', icon: 'pencil-alt' });
     const typingIntervalRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
     const [audioURL, setAudioURL] = useState<string | null>(null);
     const [weather, setWeather] = useState('Sunny'); 
@@ -105,7 +105,7 @@ const MainScreen: React.FC = () => {
     };
   
     // Function to handle when the microphone button is pressed (start recording and update call status)
-    // const handleMicrophonePressIn = async () => {
+    const handleMicrophonePressIn = async () => {
     //   try {
     //     setIsKeyboardActive(false);
     //     if(statusInfo.text == "Responding")
@@ -119,10 +119,10 @@ const MainScreen: React.FC = () => {
     //     console.log('Recording started:', res  //   } catch (error) {
     //     console.error('Error starting recording:', error);
     //   }
-    // };
+    };
   
     // Function to handle when the microphone button is released (stop recording and update call status)
-    // const handleMicrophonePressOut = async () => {
+    const handleMicrophonePressOut = async () => {
     //   try {
     //       console.log("Here comes in.");
     //       // Stop recording and immediately update the UI to show the user that processing has started
@@ -137,7 +137,7 @@ const MainScreen: React.FC = () => {
     //   } catch (error) {
     //       console.error('Error stopping recording:', error);
     //   }
-    // };
+    };
     
     // Function to Accept Calendar App Integration Permission
     const handleAcceptPermission = async () => { 
@@ -194,7 +194,7 @@ const MainScreen: React.FC = () => {
     //   });
     
     //   try {
-    //     const response = await axios.post('https://c0c8-107-155-105-218.ngrok-free.app/api/audio', formData, {
+    //     const response = await axios.post('https://e2f4-107-155-105-218.ngrok-free.app/api/audio', formData, {
     //       headers: {
     //         'Content-Type': 'multipart/form-data',
     //       },
@@ -216,7 +216,7 @@ const MainScreen: React.FC = () => {
     
     // Function to play the received audio using react-native-sound
     // const playAudio = (audioId: string) => {
-    //   const audioURL = `http://https://c0c8-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
+    //   const audioURL = `http://https://e2f4-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
     //   console.log(audioURL);
     
     //   // Play the audio and trigger wave animation
@@ -370,7 +370,7 @@ const MainScreen: React.FC = () => {
         setIsLoading(true);  // Start loading
         try {
           // Make a POST request to the backend
-          const response = await axios.post('https://c0c8-107-155-105-218.ngrok-free.app/api/text', { 
+          const response = await axios.post('https://e2f4-107-155-105-218.ngrok-free.app/api/text', { 
             text: message,  // Sending the message from the input field
           });
           if (message.includes("golf")) {
@@ -514,6 +514,156 @@ const MainScreen: React.FC = () => {
             </View>
           )
           }
+
+          {/* Assistant's Response */}
+          {/* <PanGestureHandler
+            onGestureEvent={onGestureEvent}
+            onHandlerStateChange={onHandlerStateChange}
+          > */}
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={{flexGrow: 1}}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={(isTyping || (isKeyboardActive && statusInfo.text == 'Thinking')) ? styles.responseBubbleBox : styles.responseContainer}>
+                <Text style={isTyping ? [styles.assistantResponse, {textAlign: 'left'}] : [styles.assistantResponse, {textAlign: 'center'}]}>
+                  {statusInfo.text === "Initial" 
+                    ? "Hey, what should I call you?"
+                    : (statusInfo.text === "Suggestion"
+                      ? "So, after our initial consultation, I have found a highly-rated golf course around the corner from you.\n\nI've checked, and they have bookings for today. Want me to book you in?"
+                      : (statusInfo.text === "AskingPermissions"
+                        ? "With your permission, we can make sure we work around your schedule?"
+                        : (statusInfo.text === "FinalSuggestion"
+                        ? "How about Sat 24th Aug, 11am-2pm? It looks like a perfect day for golf. Would you like me to book you in?"
+                        : (statusInfo.text === "Thinking" && isKeyboardActive)
+                        ? message
+                        : typedResponse)))
+                  }
+                </Text>
+              </View>
+          </ScrollView>
+          {/* </PanGestureHandler> */}
+
+          {/* Intro Text */}
+          {(statusInfo.text === 'Initial' || statusInfo.text === 'AskingPermissions') &&(
+            <GradientText style={styles.introText}>
+              {statusInfo.text === 'Initial' 
+                ? "You can either talk or type to E" + "\n" + "Don’t worry, you can change at any time" 
+                : "E can create, delete and reschedule your fitness events."
+              }
+            </GradientText>
+          )}
+          
+          {/*Bottom Buttons Section*/}
+          <View style={styles.bottomSection}>  
+            {/* Initial Buttons */}
+            {(statusInfo.text === 'Initial' || statusInfo.text === 'AskingPermissions') && (
+              <LinearGradient
+                colors={['#202020', '#3a3e43']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.initialButtonOuter}
+              >
+                {statusInfo.text === 'Initial' && (
+                  <>
+                    <TouchableOpacity style={styles.initialButtonInner} onPress={handleKeyboardPress}>
+                      <Icon name={'keyboard'} size={28} color="#373b40" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.initialButtonInner} onPress={handleMicrophonePressIn}>
+                      <Icon name={'microphone'} size={28} color="#373b40" />
+                    </TouchableOpacity>
+                  </>
+                )}
+          
+                {statusInfo.text === 'AskingPermissions' && (
+                  <> 
+                    <TouchableOpacity style={styles.declineButton} onPress={handleDeclinePermission}>
+                      <Icon name={'times'} size={28} color="white" />
+                    </TouchableOpacity> 
+                    <TouchableOpacity style={styles.initialButtonInner} onPress={handleAcceptPermission}>
+                      <Icon name={'check'} size={28 } color="#373b40" />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </LinearGradient>
+            )}
+
+            {/* Conditional Rendering for Mute and Small Microphone Icons */}
+            {(statusInfo.text !== 'Initial' && statusInfo.text !== 'AskingPermissions' && !isTyping) && (
+                <TouchableOpacity 
+                  style={[
+                    styles.smallButton,
+                    (statusInfo.text === 'Listening' || statusInfo.text === 'Thinking' || isKeyboardActive) && styles.disabledButton
+                  ]}
+                  onPress={(statusInfo.text !== 'Listening' && !isKeyboardActive )? () => setMuted(!isMuted) : undefined}
+                  disabled={statusInfo.text === 'Listening'}
+                >
+                  <Icon name={isMuted ? 'volume-off' : (isKeyboardActive? 'volume-mute': 'volume-up')} size={28} color="white" />
+                </TouchableOpacity>
+            )}
+
+            {/* Microphone Button (Hidden when keyboard is active) */}
+            {(!isTyping && statusInfo.text != "Initial" && statusInfo.text !== 'AskingPermissions') && (
+              <View style={styles.micButtonOuter}>
+                <LinearGradient
+                  colors={['#202020', '#3a3e43']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.micButtonOuter]}
+                >
+                  <TouchableOpacity
+                    style={statusInfo.text === 'Listening' ? styles.micButtonStop : styles.micButtonMicrophone}
+                    onPress={
+                      isKeyboardActive ? handleKeyboardPress : ((statusInfo.text === 'Learning' || statusInfo.text == 'Suggestion') ? handleMicrophonePressIn : handleMicrophonePressOut)
+                    }
+                  >
+                    <Icon
+                      name={
+                        statusInfo.text === 'Listening' ? 'stop' : (isKeyboardActive ?'keyboard' : 'microphone')
+                      } 
+                      size={35}
+                      color={statusInfo.text === 'Listening' ? "white" : "#373b40"}
+                    />
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>          
+            )}
+
+            {/* Keyboard Button */}
+            {(statusInfo.text != "Initial" && statusInfo.text !== 'AskingPermissions' && !isTyping) && (<TouchableOpacity 
+              style={[
+                styles.smallButton,
+                (statusInfo.text === 'Listening') && styles.disabledButton
+              ]}
+              onPress={statusInfo.text !== 'Listening' ? (isKeyboardActive ? handleMicrophonePressIn: handleKeyboardPress) : undefined}
+              disabled={statusInfo.text === 'Listening'}
+            >
+              <Icon name={ !isKeyboardActive ? "keyboard" : "microphone"} size={28} color="white" />
+            </TouchableOpacity>)}
+          </View>
+
+          {/* Show Input Field when Keyboard is Active */}
+          {(isKeyboardActive && isTyping) && (
+            <View style={styles.messageBox}>
+              <LinearGradient
+                colors={['#9999990D', '#FFFFFF1A']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.inputContainer}
+              >
+                <TextInput
+                  style={styles.inputField}
+                  placeholder="Type your message..."
+                  placeholderTextColor="#999"
+                  value={message}
+                  onChangeText={(text) => setMessage(text)}
+                />
+              </LinearGradient>
+              <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                <Icon name="paper-plane" size={20} color="#33363A" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ImageBackground>
     </GestureHandlerRootView>
