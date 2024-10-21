@@ -26,7 +26,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={styles.startButton}
-                    onPress={() => navigation.navigate('RegisterScreen')}
+                    onPress={() => navigation.navigate('MainScreen')}
                 >
                     <ImageBackground
                     source={require('../assets/images/next-button.png')} // Use your image here
