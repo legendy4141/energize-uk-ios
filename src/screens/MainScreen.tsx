@@ -24,8 +24,11 @@ const MainScreen: React.FC = () => {
     const [audioFilePath, setAudioFilePath] = useState<string | null>(null);
     // const [audioRecorderPlayer] = useState(new AudioRecorderPlayer());
     const [isMuted, setMuted] = useState(false);
+
     const [animatedSegments, setAnimatedSegments] = useState(0);
     const [animationInterval, setAnimationInterval] = useState<NodeJS.Timeout | null>(null);
+    const animationIntervalRef = useRef<NodeJS.Timeout | null>(null);  // Use ref instead of state for intervals
+
     const [statusInfo, setStatusInfo] = useState({ text: 'Initial', icon: 'pencil-alt' });
     const typingIntervalRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
     const [audioURL, setAudioURL] = useState<string | null>(null);
@@ -66,29 +69,41 @@ const MainScreen: React.FC = () => {
       }
     }, 100);
   
-    // Function to manage the LoadingFrame
+    // Start the animation
     const animateLoadingFrame = () => {
-      // let segmentCount = 0;
-      // const totalSegments = 60;  // Total segments in the loading animation (modify based on actual number of segments)
-      
-      // const interval = setInterval(() => {
-      //   segmentCount += 1;
-      //   setAnimatedSegments(segmentCount);  // Update the animated segments
-  
-      //   // If all segments are filled, restart from the first segment
-      //   if (segmentCount >= totalSegments) {
-      //     segmentCount = 0;
-      //   }
-      // }, 100);  // Adjust the interval time for animation speed
-  
-      // setAnimationInterval(interval);  // Store the interval so we can clear it later
-    };
-  
-    const stopLoadingAnimation = () => {
-      if (animationInterval) {
-        clearInterval(animationInterval);  // Clear the animation interval
-        setAnimationInterval(null);
+      let segmentCount = 0;
+      const totalSegments = 60;  // Total segments in the loading animation
+
+      // Clear any existing animation interval to avoid multiple intervals
+      if (animationIntervalRef.current) {
+        clearInterval(animationIntervalRef.current);
       }
+
+      const interval = setInterval(() => {
+        segmentCount += 1;
+        setAnimatedSegments(segmentCount);  // Update the animated segments
+
+        if (segmentCount >= totalSegments) {
+          segmentCount = 0;  // Restart from the first segment
+        }
+      }, 100);  // Adjust the interval time for animation speed
+
+      console.log("Starting animation, interval ID:", interval);
+      animationIntervalRef.current = interval;  // Store the interval ID in the ref
+    };
+
+    // Stop the animation
+    const stopLoadingAnimation = () => {
+      console.log("Stopping Animation. Interval ID:", animationIntervalRef.current);
+
+      if (animationIntervalRef.current) {
+        clearInterval(animationIntervalRef.current);  // Clear the animation interval
+        animationIntervalRef.current = null;  // Reset the interval in the ref
+        console.log("Animation Stopped");
+      } else {
+        console.log("No interval found to stop");
+      }
+
       setAnimatedSegments(0);  // Reset to no animated segments
     };
   
@@ -101,6 +116,7 @@ const MainScreen: React.FC = () => {
     // When stopping loading
     const handleStopLoading = () => {
       setIsLoading(false);
+      console.log("isLoadingFalse");
       stopLoadingAnimation();  // Stop the animation
     };
   
@@ -367,12 +383,13 @@ const MainScreen: React.FC = () => {
       if (message.trim()) {
         setIsTyping(false);
         setStatusInfo({ text: 'Thinking', icon: 'spinner' });
-        setIsLoading(true);  // Start loading
+        handleStartLoading();  // Start loading
         try {
           // Make a POST request to the backend
           const response = await axios.post('https://e2f4-107-155-105-218.ngrok-free.app/api/text', { 
             text: message,  // Sending the message from the input field
           });
+          handleStopLoading();  // Stop loading
           if (message.includes("golf")) {
             setStatusInfo({ text: 'Suggestion', icon: 'pencil-alt' });
           } else if (message.includes("calendar")) {
@@ -385,7 +402,6 @@ const MainScreen: React.FC = () => {
         } catch (error) {
           console.error('Error sending message:', error);
         } finally {
-          setIsLoading(false);  // Stop loading
           setMessage('');  // Clear the input field after sending
         }
       }
