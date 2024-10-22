@@ -22,6 +22,10 @@ target 'EnergizeUK' do
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+  
+  permissions_path = '../node_modules/react-native-permissions/ios'
+
+  pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
 
   target 'EnergizeUKTests' do
     inherit! :complete

@@ -5,7 +5,7 @@
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react'; 
-import { Image, View, Text, StyleSheet, ImageBackground, TouchableOpacity, ScrollView, TextInput, Alert, Platform, Animated} from 'react-native';
+import { Image, View, Text, StyleSheet, ImageBackground, TouchableOpacity, ScrollView, TextInput, Alert, Platform, Animated, KeyboardAvoidingView} from 'react-native';
 import { PanGestureHandler, State, GestureHandlerRootView, PanGestureHandlerGestureEvent} from 'react-native-gesture-handler';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -14,15 +14,23 @@ import LinearGradient from 'react-native-linear-gradient';
 import LoadingFrame from '../components/LoadingFrame';
 import GradientText from '../components/GradientText';
 import axios from 'axios';
-// import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-// import SoundPlayer from 'react-native-sound-player'
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import RNFS from 'react-native-fs';
+import Sound from 'react-native-sound';
+import {
+  Player,
+  Recorder,
+  MediaStates
+} from '@react-native-community/audio-toolkit';
+
+const dirs = RNFS;
 
 const MainScreen: React.FC = () => {
     const [userTranscript, setUserTranscript] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [typedResponse, setTypedResponse] = useState<string>('Hello, what should I call you?');
     const [audioFilePath, setAudioFilePath] = useState<string | null>(null);
-    // const [audioRecorderPlayer] = useState(new AudioRecorderPlayer());
+    const [audioRecorderPlayer] = useState(new AudioRecorderPlayer());
     const [isMuted, setMuted] = useState(false);
 
     const [animatedSegments, setAnimatedSegments] = useState(0);
@@ -31,7 +39,6 @@ const MainScreen: React.FC = () => {
 
     const [statusInfo, setStatusInfo] = useState({ text: 'Initial', icon: 'pencil-alt' });
     const typingIntervalRef = useRef<NodeJS.Timeout | number | undefined>(undefined);
-    const [audioURL, setAudioURL] = useState<string | null>(null);
     const [weather, setWeather] = useState('Sunny'); 
     const [translateY] = useState(new Animated.Value(0));  // For moving the component
     const [translateX] = useState(new Animated.Value(-300));  // Initially hidden off-screen to the left
@@ -41,11 +48,19 @@ const MainScreen: React.FC = () => {
     const [isAnimating, setIsAnimating] = useState(false); // For Spectrum Animation
     const [isKeyboardActive, setIsKeyboardActive] = useState(false); // For Keyboard Input
     const [isVisible, setIsVisible] = useState(true);  // To conditionally hide the component
-    const [isRecording, setIsRecording] = useState(false); // For Recording State
     const [isTyping, setIsTyping] = useState(false); //For Typing State
-  
+
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioFileUri, setAudioFileUri] = useState('');
+    const [soundInstance, setSoundInstance] = useState<Sound | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [audioPlayer] = useState(new AudioRecorderPlayer());
+    const [receivedAudioUrl, setReceivedAudioUrl] = useState('');
+
     const scrollViewRef = useRef<ScrollView>(null);
-    
+
+    const recorder = new Recorder(`${RNFS.DocumentDirectoryPath}/test.m4a`);
+    const [filePath, setFilePath] = useState(null);
     // Scroll to end whenever typedResponse updates (auto scroll for long responses)
     useEffect(() => {
       if (typedResponse) {
@@ -119,40 +134,78 @@ const MainScreen: React.FC = () => {
       console.log("isLoadingFalse");
       stopLoadingAnimation();  // Stop the animation
     };
+    
+    // Check and request microphone permission
+    const checkMicrophonePermission = async () => {
+      if (Platform.OS === 'ios') {
+        const result = await check(PERMISSIONS.IOS.MICROPHONE);
+        switch (result) {
+          case RESULTS.UNAVAILABLE:
+            console.log('This feature is not available (on this device / in this context)');
+            break;
+          case RESULTS.DENIED:
+            console.log('The permission has not been requested / is denied but requestable');
+            const requestResult = await request(PERMISSIONS.IOS.MICROPHONE);
+            console.log('Request result: ', requestResult);
+            break;
+          case RESULTS.GRANTED:
+            console.log('The permission is granted');
+            break;
+          case RESULTS.BLOCKED:
+            console.log('The permission is denied and not requestable anymore');
+            break;
+        }
+      }
+    };
   
     // Function to handle when the microphone button is pressed (start recording and update call status)
     const handleMicrophonePressIn = async () => {
-    //   try {
-    //     setIsKeyboardActive(false);
-    //     if(statusInfo.text == "Responding")
-    //       stopResponse();
-        
-    //     setStatusInfo({ text: 'Listening', icon: 'headphones' });
-    //     console.log(statusInfo);
-    //     const result = await audioRecorderPlayer.startRecorder();
-    //     setAudioFilePath(result);  // Store the path of the recorded audio
-    //     handleStartLoading();  // Set the recording state to true
-    //     console.log('Recording started:', res  //   } catch (error) {
-    //     console.error('Error starting recording:', error);
-    //   }
+        try {
+          setIsKeyboardActive(false);
+          if(statusInfo.text === "Responding")
+            stopResponse();
+          checkMicrophonePermission();
+          handleStartLoading();  // Set the recording state to true
+          
+          setStatusInfo({ text: 'Listening', icon: 'headphones' });
+          const result = await audioRecorderPlayer.startRecorder();
+          setAudioFilePath(result);  // Store the path of the recorded audio
+          // const fileName = 'test.mp4';
+          // let recorder = new Recorder(fileName, {
+          //   bitrate: 256000,
+          //   channels: 2,
+          //   sampleRate: 44100,
+          //   quality: 'high',
+          // }).prepare((err, fspath) => {
+          //   if (err) {
+          //     console.log('recorder prepare failed: ', err);
+          //   } else if (!err) {
+          //     props.onFileURIChange(fspath);
+          //     console.log('fspath: ', fspath);
+          //     recorder.record();
+          //   }
+          // });
+          setIsRecording(true);
+          console.log("Recording Started");
+        } catch (error) {
+          console.error('Error starting recording:', error);
+        }
     };
-  
     // Function to handle when the microphone button is released (stop recording and update call status)
     const handleMicrophonePressOut = async () => {
-    //   try {
-    //       console.log("Here comes in.");
-    //       // Stop recording and immediately update the UI to show the user that processing has started
-    //       setIsRecording(false);  // Set the recording state to false
-    //       setStatusInfo({ text: 'Thinking', icon: 'spinner' });
-  
-    //       const result = await audioRecorderPlayer.stopRecorder();  // Stop the recorder asynchronously
-    //       console.log('Recording stopped:', result);
-          
-    //       // Call the backend in the background, so the UI is responsive
-    //       await sendAudioToBackend(result);
-    //   } catch (error) {
-    //       console.error('Error stopping recording:', error);
-    //   }
+      try {
+          console.log("Here comes in.");
+          // Stop recording and immediately update the UI to show the user that processing has started
+          setIsRecording(false);  // Set the recording state to false
+          setStatusInfo({ text: 'Thinking', icon: 'spinner' });
+
+          recorder.stop();
+          const savedFilePath = recorder.fsPath;  // Get the file path after stop
+          console.log('Recording stopped. File saved at:', savedFilePath);
+          await uploadAudioFile(savedFilePath);
+      } catch (error) {
+          console.error('Error stopping recording:', error);
+      }
     };
     
     // Function to Accept Calendar App Integration Permission
@@ -199,64 +252,77 @@ const MainScreen: React.FC = () => {
       setStatusInfo({ text: 'Learning', icon: 'pencil-alt' });
     };
   
-    // Modify sendAudioToBackend function to start/stop the animation
-    // const sendAudioToBackend = async (audioPath: string) => {
-    //   setIsLoading(true);
-    //   const formData = new FormData();
-    //   formData.append('audio', {
-    //     uri: audioPath,
-    //     type: 'audio/wav',
-    //     name: 'audio.wav',
-    //   });
-    
-    //   try {
-    //     const response = await axios.post('https://e2f4-107-155-105-218.ngrok-free.app/api/audio', formData, {
-    //       headers: {
-    //         'Content-Type': 'multipart/form-data',
-    //       },
-    //     });
-    //     setStatusInfo({ text: 'Responding', icon: 'pencil-alt' });
-    //     const audioId = response.data.speechFileName;
-    //     playAudio(audioId);
+    // Upload audio file
+    const uploadAudioFile = async (audioFileUri: string) => {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: audioFileUri,
+        name: 'audio.m4a',
+        type: 'audio/m4a',
+      });
+
+      try {
+        const response = await axios.post('https://4588-107-155-105-218.ngrok-free.app/api/audio', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setStatusInfo({ text: 'Responding', icon: 'pencil-alt' });
+        const audioId = response.data.speechFileName;
+        playAudio(audioId);
         
-    //     const fullResponse = response.data.response;
-    //     startTypingEffect(fullResponse);
-    //     handleStopLoading();
-    //   } catch (error) {
-    //     console.error('Error sending audio to backend:', error);
-    //     handleStopLoading();
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
+        const fullResponse = response.data.response;
+        startTypingEffect(fullResponse);
+        handleStopLoading();
+      } catch (error) {
+        console.error('Error sending audio to backend:', error);
+        handleStopLoading();
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
     // Function to play the received audio using react-native-sound
-    // const playAudio = (audioId: string) => {
-    //   const audioURL = `http://https://e2f4-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
-    //   console.log(audioURL);
+    const playAudio = (audioId: string) => {
+      const audioURL = `http://https://4588-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
+      console.log(audioURL);
+      const sound = new Sound(audioURL, undefined, (error) => {
+        if (error) {
+          console.error('Failed to load sound', error);
+          return;
+        }
     
-    //   // Play the audio and trigger wave animation
-    //   if(isMuted)
-    //     SoundPlayer.setVolume(0);
-    //   SoundPlayer.playUrl(audioURL);
-    //   setAudioURL(audioURL);
-    //   setIsAnimating(true); 
-  
-    //   // Add listener for when the audio stops
-    //   const finishedPlayingSubscription = SoundPlayer.addEventListener('FinishedPlaying', () => {
-    //     setStatusInfo({ text: 'Learning', icon: 'pencil-alt' });
-    //     setIsAnimating(false);
-    //     finishedPlayingSubscription.remove();
-    //   });
-      
-    //   return () => {
-    //     finishedPlayingSubscription.remove();
-    //   };
-    // };
+        // Set volume
+        if(isMuted)
+          sound.setVolume(0);
+    
+        // Play the sound
+        sound.play((success) => {
+          if (success) {
+            console.log('Sound finished playing');
+          } else {
+            console.log('Playback failed due to audio decoding errors');
+          }
+          sound.release(); // Release when finished
+          setIsPlaying(false);
+          setSoundInstance(null); // Clear the sound instance
+        });
+
+        setIsPlaying(true);
+        setSoundInstance(sound); // Store the sound instance globally
+      });
+      setIsAnimating(true); 
+    };
     
     // Function to stop the assistant's response
     const stopResponse = () => {
-      // SoundPlayer.stop();
+      if (soundInstance) {
+        soundInstance.stop(() => {
+          console.log('Audio playback stopped manually');
+        });
+        setIsPlaying(false);
+        setSoundInstance(null);
+      }
       console.log("Stop Button Clicked....");
       if (typingIntervalRef.current) {
         clearInterval(typingIntervalRef.current);
@@ -386,7 +452,7 @@ const MainScreen: React.FC = () => {
         handleStartLoading();  // Start loading
         try {
           // Make a POST request to the backend
-          const response = await axios.post('https://e2f4-107-155-105-218.ngrok-free.app/api/text', { 
+          const response = await axios.post('https://4588-107-155-105-218.ngrok-free.app/api/text', { 
             text: message,  // Sending the message from the input field
           });
           handleStopLoading();  // Stop loading
@@ -660,7 +726,7 @@ const MainScreen: React.FC = () => {
 
           {/* Show Input Field when Keyboard is Active */}
           {(isKeyboardActive && isTyping) && (
-            <View style={styles.messageBox}>
+              <View style={styles.messageBox}>
               <LinearGradient
                 colors={['#9999990D', '#FFFFFF1A']}
                 start={{ x: 0.5, y: 0 }}
@@ -685,6 +751,7 @@ const MainScreen: React.FC = () => {
     </GestureHandlerRootView>
     );
 };
+
 const styles = StyleSheet.create({
     // Main Background and Container
     background: {

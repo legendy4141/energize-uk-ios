@@ -9,6 +9,8 @@ PODS:
   - hermes-engine (0.75.4):
     - hermes-engine/Pre-built (= 0.75.4)
   - hermes-engine/Pre-built (0.75.4)
+  - Permission-Microphone (3.0.4):
+    - RNPermissions
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -1501,7 +1503,13 @@ PODS:
     - React-logger (= 0.75.4)
     - React-perflogger (= 0.75.4)
     - React-utils (= 0.75.4)
+  - ReactNativeAudioToolkit (2.0.3):
+    - React
+  - RNAudioRecorderPlayer (3.6.12):
+    - React-Core
   - RNCMaskedView (0.3.1):
+    - React-Core
+  - RNFS (2.20.0):
     - React-Core
   - RNGestureHandler (2.20.0):
     - DoubleConversion
@@ -1524,7 +1532,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNPermissions (5.0.1):
+  - RNPermissions (3.0.4):
     - React-Core
   - RNScreens (3.34.0):
     - DoubleConversion
@@ -1548,6 +1556,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNSound (0.11.2):
+    - React-Core
+    - RNSound/Core (= 0.11.2)
+  - RNSound/Core (0.11.2):
+    - React-Core
   - RNSVG (15.8.0):
     - React-Core
   - RNVectorIcons (10.2.0):
@@ -1582,6 +1595,7 @@ DEPENDENCIES:
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - Permission-Microphone (from `../node_modules/react-native-permissions/ios/Microphone`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -1640,10 +1654,14 @@ DEPENDENCIES:
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "ReactNativeAudioToolkit (from `../node_modules/@react-native-community/audio-toolkit`)"
+  - RNAudioRecorderPlayer (from `../node_modules/react-native-audio-recorder-player`)
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSound (from `../node_modules/react-native-sound`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -1668,6 +1686,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2024-08-15-RNv0.75.1-4b3bf912cc0f705b51b71ce1a5b8bd79b93a451b
+  Permission-Microphone:
+    :path: "../node_modules/react-native-permissions/ios/Microphone"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -1780,14 +1800,22 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  ReactNativeAudioToolkit:
+    :path: "../node_modules/@react-native-community/audio-toolkit"
+  RNAudioRecorderPlayer:
+    :path: "../node_modules/react-native-audio-recorder-player"
   RNCMaskedView:
     :path: "../node_modules/@react-native-masked-view/masked-view"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSound:
+    :path: "../node_modules/react-native-sound"
   RNSVG:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
@@ -1803,6 +1831,7 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: 69ef571f3de08433d766d614c73a9838a06bf7eb
   hermes-engine: ea92f60f37dba025e293cbe4b4a548fd26b610a0
+  Permission-Microphone: 450ff628a7146c415cfb98025e518810d9fa76ad
   RCT-Folly: 4464f4d875961fce86008d45f4ecf6cef6de0740
   RCTDeprecation: 726d24248aeab6d7180dac71a936bbca6a994ed1
   RCTRequired: a94e7febda6db0345d207e854323c37e3a31d93b
@@ -1859,15 +1888,19 @@ SPEC CHECKSUMS:
   React-utils: cbe8b8b3d7b2ac282e018e46f0e7b25cdc87c5a0
   ReactCodegen: 4bcb34e6b5ebf6eef5cee34f55aa39991ea1c1f1
   ReactCommon: 6a952e50c2a4b694731d7682aaa6c79bc156e4ad
+  ReactNativeAudioToolkit: de9610f323e855ac6574be8c99621f3d57c5df06
+  RNAudioRecorderPlayer: 224c7de87722938aedce04000d09baa633148f5b
   RNCMaskedView: 090213d32d8b3bb83a4dcb7d12c18f0152591906
+  RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 6dfe7692a191ee224748964127114edf057a1475
-  RNPermissions: b055b1c1501f1402363b6928f9766d8be12fcb73
+  RNPermissions: c46788f4cd402287425983e04a4c9bb4356036eb
   RNScreens: 19719a9c326e925498ac3b2d35c4e50fe87afc06
+  RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852
   RNSVG: 8b1a777d54096b8c2a0fd38fc9d5a454332bbb4d
   RNVectorIcons: 6382277afab3c54658e9d555ee0faa7a37827136
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 055f92ad73f8c8600a93f0e25ac0b2344c3b07e6
 
-PODFILE CHECKSUM: d52179f31610b8e67a76d76441e946b2c1058481
+PODFILE CHECKSUM: 78c6a4bea245375667dda2d605e3b894dc402fa1
 
 COCOAPODS: 1.15.2
