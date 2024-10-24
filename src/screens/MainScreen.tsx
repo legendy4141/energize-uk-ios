@@ -169,22 +169,8 @@ const MainScreen: React.FC = () => {
           
           setStatusInfo({ text: 'Listening', icon: 'headphones' });
           const result = await audioRecorderPlayer.startRecorder();
-          setAudioFilePath(result);  // Store the path of the recorded audio
-          // const fileName = 'test.mp4';
-          // let recorder = new Recorder(fileName, {
-          //   bitrate: 256000,
-          //   channels: 2,
-          //   sampleRate: 44100,
-          //   quality: 'high',
-          // }).prepare((err, fspath) => {
-          //   if (err) {
-          //     console.log('recorder prepare failed: ', err);
-          //   } else if (!err) {
-          //     props.onFileURIChange(fspath);
-          //     console.log('fspath: ', fspath);
-          //     recorder.record();
-          //   }
-          // });
+          console.log(result);
+
           setIsRecording(true);
           console.log("Recording Started");
         } catch (error) {
@@ -199,10 +185,9 @@ const MainScreen: React.FC = () => {
           setIsRecording(false);  // Set the recording state to false
           setStatusInfo({ text: 'Thinking', icon: 'spinner' });
 
-          recorder.stop();
-          const savedFilePath = recorder.fsPath;  // Get the file path after stop
-          console.log('Recording stopped. File saved at:', savedFilePath);
-          await uploadAudioFile(savedFilePath);
+          const result = await audioRecorderPlayer.stopRecorder();  // Stop the recorder asynchronously
+          console.log('Recording stopped:', result);
+          await uploadAudioFile(result);
       } catch (error) {
           console.error('Error stopping recording:', error);
       }
@@ -252,17 +237,18 @@ const MainScreen: React.FC = () => {
       setStatusInfo({ text: 'Learning', icon: 'pencil-alt' });
     };
   
-    // Upload audio file
-    const uploadAudioFile = async (audioFileUri: string) => {
+    // Modify sendAudioToBackend function to start/stop the animation
+    const uploadAudioFile = async (audioPath: string) => {
+      setIsLoading(true);
       const formData = new FormData();
-      formData.append('file', {
-        uri: audioFileUri,
-        name: 'audio.m4a',
-        type: 'audio/m4a',
+      formData.append('audio', {
+        uri: audioPath,
+        type: 'audio/wav',
+        name: 'audio.wav',
       });
-
+    
       try {
-        const response = await axios.post('https://4588-107-155-105-218.ngrok-free.app/api/audio', formData, {
+        const response = await axios.post('https://43e9-107-155-105-218.ngrok-free.app/api/audio', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -284,7 +270,7 @@ const MainScreen: React.FC = () => {
     
     // Function to play the received audio using react-native-sound
     const playAudio = (audioId: string) => {
-      const audioURL = `http://https://4588-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
+      const audioURL = `https://43e9-107-155-105-218.ngrok-free.app/uploads/${audioId}.mp3`;
       console.log(audioURL);
       const sound = new Sound(audioURL, undefined, (error) => {
         if (error) {
@@ -452,7 +438,7 @@ const MainScreen: React.FC = () => {
         handleStartLoading();  // Start loading
         try {
           // Make a POST request to the backend
-          const response = await axios.post('https://4588-107-155-105-218.ngrok-free.app/api/text', { 
+          const response = await axios.post('https://43e9-107-155-105-218.ngrok-free.app/api/text', { 
             text: message,  // Sending the message from the input field
           });
           handleStopLoading();  // Stop loading
